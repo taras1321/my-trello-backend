@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { compare } from 'bcrypt'
 import { sign } from 'jsonwebtoken'
@@ -24,10 +24,7 @@ export class UserService {
         })
         
         if (userByEmail) {
-            throw new HttpException(
-                'User with this email already exist',
-                HttpStatus.BAD_REQUEST
-            )
+            throw new BadRequestException('User with this email already exist')
         }
         
         const newUser = this.userRepository.create(registrationUserDto)
@@ -42,10 +39,7 @@ export class UserService {
         })
         
         if (!user) {
-            throw new HttpException(
-                'Wrong email or password',
-                HttpStatus.BAD_REQUEST
-            )
+            throw new BadRequestException('Wrong email or password')
         }
         
         const isPasswordCorrect = await compare(
@@ -54,10 +48,7 @@ export class UserService {
         )
         
         if (!isPasswordCorrect) {
-            throw new HttpException(
-                'Wrong email or password',
-                HttpStatus.BAD_REQUEST
-            )
+            throw new BadRequestException('Wrong email or password')
         }
         
         return user
@@ -65,9 +56,12 @@ export class UserService {
     
     generateJwt(user: UserEntity): string {
         return sign({
-            id: user.id,
-            email: user.email
+            id: user.id
         }, JWT_SECRET)
+    }
+    
+    getUserById(id: number): Promise<UserEntity> {
+        return this.userRepository.findOne({ where: { id } })
     }
     
     createUserResponse(user: UserEntity): UserResponseType {

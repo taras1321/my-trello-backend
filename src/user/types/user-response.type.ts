@@ -1,3 +1,3 @@
 import { UserEntity } from '../user.entity'
 
-export type UserResponseType = Omit<UserEntity, 'hashPassword'> & { token: string }
+export type UserResponseType = Omit<UserEntity, 'hashPassword' | 'password'> & { token: string }
