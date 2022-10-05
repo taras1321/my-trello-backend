@@ -1,6 +1,5 @@
 import {
-    Column, CreateDateColumn, Entity, ManyToMany, OneToMany,
-    PrimaryGeneratedColumn
+    Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn
 } from 'typeorm'
 import { CardEntity } from '../card/card.entity'
 import { ListEntity } from '../list/list.entity'

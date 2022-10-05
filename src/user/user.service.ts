@@ -12,10 +12,7 @@ import { UserEntity } from './user.entity'
 @Injectable()
 export class UserService {
     
-    constructor(
-        @InjectRepository(UserEntity)
-        private userRepository: Repository<UserEntity>
-    ) {
+    constructor(@InjectRepository(UserEntity) private userRepository: Repository<UserEntity>) {
     }
     
     async registration(registrationUserDto: RegistrationUserDto): Promise<UserEntity> {
@@ -55,9 +52,7 @@ export class UserService {
     }
     
     generateJwt(user: UserEntity): string {
-        return sign({
-            id: user.id
-        }, JWT_SECRET)
+        return sign({ id: user.id }, JWT_SECRET)
     }
     
     getUserById(id: number): Promise<UserEntity> {
@@ -66,11 +61,7 @@ export class UserService {
     
     createUserResponse(user: UserEntity): UserResponseType {
         delete user.password
-        
-        return {
-            ...user,
-            token: this.generateJwt(user)
-        }
+        return { ...user, token: this.generateJwt(user) }
     }
     
 }

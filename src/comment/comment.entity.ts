@@ -1,6 +1,4 @@
-import {
-    Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn
-} from 'typeorm'
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm'
 import { CardEntity } from '../card/card.entity'
 import { UserEntity } from '../user/user.entity'
 

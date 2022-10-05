@@ -1,12 +1,12 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { BoardModule } from './board/board.module'
+import { CardModule } from './card/card.module'
+import { CommentModule } from './comment/comment.module'
+import { ListModule } from './list/list.module'
 import { ormConfig } from './orm-config'
 import { AuthMiddleware } from './user/middlewares/auth.middleware'
 import { UserModule } from './user/user.module'
-import { BoardModule } from './board/board.module';
-import { ListModule } from './list/list.module';
-import { CardModule } from './card/card.module';
-import { CommentModule } from './comment/comment.module';
 
 @Module({
     imports: [

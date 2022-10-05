@@ -1,6 +1,4 @@
-import {
-    Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn
-} from 'typeorm'
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
 import { BoardEntity } from '../board/board.entity'
 import { CommentEntity } from '../comment/comment.entity'
 import { ListEntity } from '../list/list.entity'

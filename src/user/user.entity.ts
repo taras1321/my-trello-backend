@@ -1,7 +1,6 @@
 import { hash } from 'bcrypt'
 import {
-    BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany,
-    PrimaryGeneratedColumn
+    BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn
 } from 'typeorm'
 import { BoardEntity } from '../board/board.entity'
 import { CardEntity } from '../card/card.entity'

@@ -1,6 +1,4 @@
-import {
-    CanActivate, ExecutionContext, Injectable, UnauthorizedException
-} from '@nestjs/common'
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common'
 
 @Injectable()
 export class AutoGuard implements CanActivate {

@@ -1,6 +1,4 @@
-import {
-    ArgumentMetadata, HttpException, HttpStatus, PipeTransform
-} from '@nestjs/common'
+import { ArgumentMetadata, BadRequestException, PipeTransform } from '@nestjs/common'
 import { plainToInstance } from 'class-transformer'
 import { validate, ValidationError } from 'class-validator'
 
@@ -8,21 +6,18 @@ export class BackendValidationPipe implements PipeTransform {
     
     async transform(value: any, metadata: ArgumentMetadata) {
         const object = plainToInstance(metadata.metatype, value)
-    
+        
         if (typeof object !== 'object') {
             return value
         }
-    
+        
         const errors = await validate(object)
-    
+        
         if (errors.length === 0) {
             return value
         }
-    
-        throw new HttpException(
-            { errors: this.formatError(errors) },
-            HttpStatus.BAD_REQUEST
-        )
+        
+        throw new BadRequestException({ errors: this.formatError(errors) })
     }
     
     formatError(errors: ValidationError[]) {
@@ -31,5 +26,5 @@ export class BackendValidationPipe implements PipeTransform {
             return acc
         }, {})
     }
-
+    
 }
