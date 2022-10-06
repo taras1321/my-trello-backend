@@ -1,6 +1,6 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common'
 import { User } from '../user/decorators/user.decorator'
-import { AutoGuard } from '../user/guards/auto-guard'
+import { AuthGuard } from '../user/guards/auth-guard'
 import { UserEntity } from '../user/user.entity'
 import { BoardEntity } from './board.entity'
 import { BoardService } from './board.service'
@@ -14,7 +14,7 @@ export class BoardController {
     }
     
     @Post('create')
-    @UseGuards(AutoGuard)
+    @UseGuards(AuthGuard)
     async create(
         @User() currentUser: UserEntity,
         @Body() createBoardDto: CreateBoardDto
@@ -22,8 +22,23 @@ export class BoardController {
         return this.boardService.create(createBoardDto, currentUser)
     }
     
+    @Get()
+    @UseGuards(AuthGuard)
+    async getBoards(@User('id') userId: number): Promise<BoardEntity[]> {
+        return this.boardService.getBoards(userId)
+    }
+    
+    @Get(':id')
+    @UseGuards(AuthGuard)
+    async getBoardById(
+        @Param('id') boardId: number,
+        @User('id') userId: number
+    ): Promise<any> {
+        return this.boardService.getBoardWithListsAndCards(boardId, userId)
+    }
+    
     @Post('add-member')
-    @UseGuards(AutoGuard)
+    @UseGuards(AuthGuard)
     async addMember(
         @User('id') currentUserId: number,
         @Body() addMemberDto: AddMemberDto
@@ -32,7 +47,7 @@ export class BoardController {
     }
     
     @Post('add-admin')
-    @UseGuards(AutoGuard)
+    @UseGuards(AuthGuard)
     async addAdmin(
         @User('id') currentUserId: number,
         @Body() addAdminDto: AddMemberDto

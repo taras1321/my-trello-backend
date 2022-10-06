@@ -17,13 +17,21 @@ export class BoardEntity {
     @CreateDateColumn()
     createdDate: Date
     
-    @Column({ type: 'simple-json', nullable: true })
-    order: { list: number, cards: number[] }[]
+    @Column({ type: 'simple-json', default: [] })
+    order: { listId: number, cardsIds: number[] }[]
     
-    @ManyToMany(() => UserEntity, user => user.adminBoards)
+    @ManyToMany(
+        () => UserEntity,
+        user => user.adminBoards,
+        { eager: true }
+    )
     admins: UserEntity[]
     
-    @ManyToMany(() => UserEntity, user => user.memberBoards)
+    @ManyToMany(
+        () => UserEntity,
+        user => user.memberBoards,
+        { eager: true }
+    )
     members: UserEntity[]
     
     @ManyToMany(() => UserEntity, user => user.favoriteBoards)

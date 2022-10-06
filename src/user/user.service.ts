@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { compare } from 'bcrypt'
 import { sign } from 'jsonwebtoken'
@@ -55,8 +55,14 @@ export class UserService {
         return sign({ id: user.id }, JWT_SECRET)
     }
     
-    getUserById(id: number): Promise<UserEntity> {
-        return this.userRepository.findOne({ where: { id } })
+    async getUserById(id: number): Promise<UserEntity> {
+        const user = await this.userRepository.findOne({ where: { id } })
+        
+        if (!user) {
+            throw new NotFoundException('User not found')
+        }
+        
+        return user
     }
     
     createUserResponse(user: UserEntity): UserResponseType {
