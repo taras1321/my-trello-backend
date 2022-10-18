@@ -4,6 +4,7 @@ import {
 import { CardEntity } from '../card/card.entity'
 import { ListEntity } from '../list/list.entity'
 import { UserEntity } from '../user/user.entity'
+import { BoardColorsEnum } from './types/board-colors.enum'
 
 @Entity({ name: 'board' })
 export class BoardEntity {
@@ -13,6 +14,13 @@ export class BoardEntity {
     
     @Column()
     name: string
+    
+    @Column({
+        type: 'enum',
+        enum: BoardColorsEnum,
+        default: BoardColorsEnum.BLUE
+    })
+    color: BoardColorsEnum
     
     @CreateDateColumn()
     createdDate: Date

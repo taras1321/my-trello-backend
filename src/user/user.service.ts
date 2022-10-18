@@ -6,7 +6,7 @@ import { Repository } from 'typeorm'
 import { JWT_SECRET } from '../config'
 import { LoginUserDto } from './dto/login-user.dto'
 import { RegistrationUserDto } from './dto/registration-user.dto'
-import { UserResponseType } from './types/user-response.type'
+import { UserResponseInterface } from './types/user-response.interface'
 import { UserEntity } from './user.entity'
 
 @Injectable()
@@ -55,19 +55,29 @@ export class UserService {
         return sign({ id: user.id }, JWT_SECRET)
     }
     
-    async getUserById(id: number): Promise<UserEntity> {
+    async getUserById(id: number, throwErrorIfUserNotFound: boolean = true): Promise<UserEntity> {
         const user = await this.userRepository.findOne({ where: { id } })
         
-        if (!user) {
+        if (!user && throwErrorIfUserNotFound) {
             throw new NotFoundException('User not found')
         }
         
         return user
     }
     
-    createUserResponse(user: UserEntity): UserResponseType {
+    createUserResponse(user: UserEntity): UserResponseInterface {
         delete user.password
         return { ...user, token: this.generateJwt(user) }
+    }
+    
+    async getUserByEmail(email: string): Promise<UserEntity> {
+        const user = await this.userRepository.findOne({ where: { email } })
+        
+        if (!user) {
+            throw new NotFoundException('User not found')
+        }
+        
+        return user
     }
     
 }

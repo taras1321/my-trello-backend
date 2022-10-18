@@ -14,7 +14,7 @@ export class ListEntity {
     @ManyToOne(
         () => BoardEntity,
         board => board.lists,
-        { nullable: false }
+        { nullable: false, onDelete: 'CASCADE' }
     )
     board: BoardEntity
     

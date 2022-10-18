@@ -17,7 +17,7 @@ export class CommentEntity {
     @ManyToOne(
         () => CardEntity,
         card => card.comments,
-        { nullable: false }
+        { nullable: false, onDelete: 'CASCADE' }
     )
     card: CardEntity
     

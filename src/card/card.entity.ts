@@ -22,14 +22,14 @@ export class CardEntity {
     @ManyToOne(
         () => BoardEntity,
         board => board.cards,
-        { nullable: false }
+        { nullable: false, onDelete: 'CASCADE' }
     )
     board: BoardEntity
     
     @ManyToOne(
         () => ListEntity,
         list => list.cards,
-        { nullable: false }
+        { nullable: false, onDelete: 'CASCADE' }
     )
     list: ListEntity
     

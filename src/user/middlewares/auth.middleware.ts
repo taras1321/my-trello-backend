@@ -27,7 +27,7 @@ export class AuthMiddleware implements NestMiddleware {
                 return req.user = null
             }
             
-            req.user = await this.userService.getUserById(decode.id)
+            req.user = await this.userService.getUserById(decode.id, false)
         } catch {
             req.user = null
         }
