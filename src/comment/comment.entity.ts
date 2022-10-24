@@ -9,7 +9,7 @@ export class CommentEntity {
     id: number
     
     @Column()
-    name: string
+    text: string
     
     @CreateDateColumn()
     createdDate: Date
@@ -24,7 +24,7 @@ export class CommentEntity {
     @ManyToOne(
         () => UserEntity,
         user => user.comments,
-        { nullable: false }
+        { nullable: false, onDelete: 'CASCADE' }
     )
     user: UserEntity
     

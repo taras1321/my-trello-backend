@@ -1,11 +1,15 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common'
 import { User } from '../user/decorators/user.decorator'
 import { AuthGuard } from '../user/guards/auth-guard'
 import { UserEntity } from '../user/user.entity'
-import { BoardEntity } from './board.entity'
 import { BoardService } from './board.service'
+import { ChangeBoardDto } from './dto/change-board.dto'
+import { ChangeOrderDto } from './dto/change-order.dto'
 import { CreateBoardDto } from './dto/create-board.dto'
 import { MemberDto } from './dto/member.dto'
+import { BoardWithListsAndCardsInterface } from './types/board-with-lists-and-cards.interface'
+import { ChangeBoardType } from './types/change-board.type'
+import { CreateBoardResponseInterface } from './types/create-board-response.interface'
 import { GetBoardsInterface } from './types/get-boards.interface'
 import { GetMembersInterface } from './types/get-members.interface'
 import { ToggleFavoriteInterface } from './types/toggle-favorite.interface'
@@ -21,7 +25,7 @@ export class BoardController {
     async create(
         @User() currentUser: UserEntity,
         @Body() createBoardDto: CreateBoardDto
-    ): Promise<BoardEntity> {
+    ): Promise<CreateBoardResponseInterface> {
         return this.boardService.create(createBoardDto, currentUser)
     }
     
@@ -44,8 +48,27 @@ export class BoardController {
     async getBoardById(
         @Param('id') boardId: number,
         @User('id') userId: number
-    ): Promise<any> {
+    ): Promise<BoardWithListsAndCardsInterface> {
         return this.boardService.getBoardWithListsAndCards(boardId, userId)
+    }
+    
+    @Put(':id')
+    @UseGuards(AuthGuard)
+    async changeBoard(
+        @Param('id') boardId: number,
+        @User('id') userId: number,
+        @Body() changeBoardDto: ChangeBoardDto
+    ): Promise<ChangeBoardType> {
+        return this.boardService.changeBoard(boardId, userId, changeBoardDto)
+    }
+    
+    @Delete(':id')
+    @UseGuards(AuthGuard)
+    async deleteBoard(
+        @Param('id') boardId: number,
+        @User('id') userId: number
+    ): Promise<void> {
+        return this.boardService.deleteBoard(boardId, userId)
     }
     
     @Post('add-member')
@@ -100,6 +123,15 @@ export class BoardController {
         @Param('boardId') boardId: number
     ): Promise<GetMembersInterface> {
         return this.boardService.getMembers(boardId, currentUser)
+    }
+    
+    @Post('change-order')
+    @UseGuards(AuthGuard)
+    async changeOrder(
+        @User('id') currentUserId: number,
+        @Body() changeOrderDto: ChangeOrderDto
+    ): Promise<void> {
+        return this.boardService.changeOrder(changeOrderDto, currentUserId)
     }
     
 }

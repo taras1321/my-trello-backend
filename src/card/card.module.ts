@@ -1,19 +1,23 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { BoardEntity } from '../board/board.entity'
-import { BoardService } from '../board/board.service'
-import { ListEntity } from '../list/list.entity'
-import { ListService } from '../list/list.service'
-import { UserEntity } from '../user/user.entity'
-import { UserService } from '../user/user.service'
+import { BoardModule } from '../board/board.module'
+import { ListModule } from '../list/list.module'
+import { UserModule } from '../user/user.module'
 import { CardController } from './card.controller'
 import { CardEntity } from './card.entity'
 import { CardService } from './card.service'
 
 @Module({
-    imports: [TypeOrmModule.forFeature([CardEntity, BoardEntity, UserEntity, ListEntity])],
+    imports: [
+        TypeOrmModule.forFeature([CardEntity, BoardEntity]),
+        forwardRef(() => BoardModule),
+        ListModule,
+        UserModule
+    ],
     controllers: [CardController],
-    providers: [CardService, BoardService, UserService, ListService]
+    providers: [CardService],
+    exports: [CardService]
 })
 export class CardModule {
 }

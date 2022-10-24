@@ -1,13 +1,21 @@
 import {
-    BadRequestException, ForbiddenException, Injectable, NotFoundException
+    BadRequestException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { CardEntity } from '../card/card.entity'
+import { CardService } from '../card/card.service'
+import { ListService } from '../list/list.service'
 import { UserEntity } from '../user/user.entity'
 import { UserService } from '../user/user.service'
 import { BoardEntity } from './board.entity'
+import { ChangeBoardDto } from './dto/change-board.dto'
+import { ChangeOrderDto } from './dto/change-order.dto'
 import { CreateBoardDto } from './dto/create-board.dto'
 import { MemberDto } from './dto/member.dto'
+import { BoardWithListsAndCardsInterface } from './types/board-with-lists-and-cards.interface'
+import { ChangeBoardType } from './types/change-board.type'
+import { CreateBoardResponseInterface } from './types/create-board-response.interface'
 import { GetBoardsInterface } from './types/get-boards.interface'
 import { GetMembersInterface } from './types/get-members.interface'
 import { ToggleFavoriteInterface } from './types/toggle-favorite.interface'
@@ -17,18 +25,27 @@ export class BoardService {
     
     constructor(
         @InjectRepository(BoardEntity) private boardRepository: Repository<BoardEntity>,
-        private userService: UserService
+        @InjectRepository(CardEntity) private cardRepository: Repository<CardEntity>,
+        private userService: UserService,
+        @Inject(forwardRef(() => ListService))
+        private listService: ListService,
+        @Inject(forwardRef(() => CardService))
+        private cardService: CardService
     ) {
     }
     
-    async create(createBoardDto: CreateBoardDto, currentUser: UserEntity): Promise<BoardEntity> {
+    async create(
+        createBoardDto: CreateBoardDto,
+        currentUser: UserEntity
+    ): Promise<CreateBoardResponseInterface> {
         const newBoard = this.boardRepository.create(createBoardDto)
         newBoard.admins = [currentUser]
+        await this.boardRepository.save(newBoard)
         
-        return this.boardRepository.save(newBoard)
+        return { id: newBoard.id }
     }
     
-    async getBoardById(
+    async getBoardByIdAndCheckAccess(
         boardId: number,
         userId: number,
         additionalRelations: string[] = []
@@ -42,15 +59,12 @@ export class BoardService {
             throw new NotFoundException('Board not found')
         }
         
-        if (this.isUserAdmin(userId, board) || this.isUserMember(userId, board)) {
-            return board
-        }
-        
-        throw new ForbiddenException('You do not have access to this board')
+        this.checkUserAccessToBoard(board, userId)
+        return board
     }
     
     async addMember(addMemberDto: MemberDto, currentUserId: number): Promise<void> {
-        const board = await this.getBoardById(addMemberDto.boardId, currentUserId)
+        const board = await this.getBoardByIdAndCheckAccess(addMemberDto.boardId, currentUserId)
         
         if (!this.isUserAdmin(currentUserId, board)) {
             throw new ForbiddenException('You do not have access to add members')
@@ -66,13 +80,13 @@ export class BoardService {
         
         const newMember = await this.userService.getUserById(addMemberDto.userId)
         board.members.push(newMember)
-    
+        
         await this.boardRepository.save(board)
         return
     }
     
     async removeMember(removeMemberDto: MemberDto, currentUserId: number): Promise<void> {
-        const board = await this.getBoardById(removeMemberDto.boardId, currentUserId)
+        const board = await this.getBoardByIdAndCheckAccess(removeMemberDto.boardId, currentUserId)
         const isCurrentUserRemovingUser = currentUserId === removeMemberDto.userId
         
         if (!(isCurrentUserRemovingUser || this.isUserAdmin(currentUserId, board))) {
@@ -90,7 +104,7 @@ export class BoardService {
     }
     
     async addAdmin(addAdminDto: MemberDto, currentUserId: number): Promise<void> {
-        const board = await this.getBoardById(addAdminDto.boardId, currentUserId)
+        const board = await this.getBoardByIdAndCheckAccess(addAdminDto.boardId, currentUserId)
         
         if (!this.isUserAdmin(currentUserId, board)) {
             throw new ForbiddenException('You do not have access to add members')
@@ -106,13 +120,13 @@ export class BoardService {
         
         const newAdmin = await this.userService.getUserById(addAdminDto.userId)
         board.admins.push(newAdmin)
-        
         await this.boardRepository.save(board)
+        
         return
     }
     
     async removeAdmin(removeAdminDto: MemberDto, currentUserId: number): Promise<void> {
-        const board = await this.getBoardById(removeAdminDto.boardId, currentUserId)
+        const board = await this.getBoardByIdAndCheckAccess(removeAdminDto.boardId, currentUserId)
         
         if (!this.isUserAdmin(currentUserId, board)) {
             throw new ForbiddenException('You do not have access to remove admins')
@@ -214,30 +228,83 @@ export class BoardService {
         }
     }
     
-    async getBoardWithListsAndCards(boardId: number, userId: number): Promise<BoardEntity> {
-        const board = await this.getBoardById(boardId, userId, ['lists', 'cards'])
-        
-        const fullBoard = {
-            ...board,
-            lists: board.order.map(item => {
-                const list = board.lists.find(list => list.id === item.listId)
-                list.cards = board.cards.filter(card => item.cardsIds.includes(card.id))
-                
-                return list
-            })
+    checkUserAccessToBoard(board: BoardEntity, userId: number): void {
+        if (this.isUserAdmin(userId, board) || this.isUserMember(userId, board)) {
+            return
         }
         
-        delete fullBoard.order
-        delete fullBoard.cards
+        throw new ForbiddenException('You do not have access to this board')
+    }
+    
+    async getBoardWithListsAndCards(
+        boardId: number,
+        userId: number
+    ): Promise<BoardWithListsAndCardsInterface> {
+        const board = await this.boardRepository
+            .createQueryBuilder('board')
+            .leftJoinAndSelect('board.lists', 'list')
+            .leftJoinAndSelect('board.cards', 'card')
+            .leftJoinAndSelect('board.admins', 'admin')
+            .leftJoinAndSelect('board.members', 'member')
+            .leftJoin('card.comments', 'comment')
+            .leftJoinAndSelect('card.executor', 'executor')
+            .loadRelationCountAndMap('card.commentsLength', 'card.comments')
+            .where('board.id = :id', { id: boardId })
+            .getOne()
         
-        return fullBoard
+        if (!board) {
+            throw new NotFoundException('Board not found')
+        }
+        
+        this.checkUserAccessToBoard(board, userId)
+        const boardListIds = board.lists.map(list => list.id)
+        const boardCardIds = board.cards.map(card => card.id)
+        
+        board.order.forEach(item => {
+            const listId = item.listId
+            
+            if (!boardListIds.includes(listId)) {
+                board.order = board.order.filter(item => item.listId !== listId)
+            }
+            
+            item.cardsIds.forEach(cardId => {
+                if (!boardCardIds.includes(cardId)) {
+                    item.cardsIds = item.cardsIds.filter(id => id !== cardId)
+                }
+            })
+        })
+        
+        await this.boardRepository.save(board)
+        
+        return {
+            id: board.id,
+            name: board.name,
+            color: board.color,
+            isCurrentUserAdmin: this.isUserAdmin(userId, board),
+            lists: board.order.map(item => {
+                const list = board.lists.find(list => list.id === item.listId)
+                
+                const cards = item.cardsIds.map(cardId => {
+                    const card = board.cards.find(card => card.id === cardId)
+                    
+                    return {
+                        id: card.id,
+                        name: card.name,
+                        hasExecutor: !!card.executor,
+                        commentsCount: card['commentsLength']
+                    }
+                })
+                
+                return { id: list.id, name: list.name, cards }
+            })
+        }
     }
     
     async toggleFavorite(
         boardId: number,
         currentUser: UserEntity
     ): Promise<ToggleFavoriteInterface> {
-        const board = await this.getBoardById(boardId, currentUser.id, ['likedUsers'])
+        const board = await this.getBoardByIdAndCheckAccess(boardId, currentUser.id, ['likedUsers'])
         const likedUserIds = board.likedUsers.map(user => user.id)
         
         if (likedUserIds.includes(currentUser.id)) {
@@ -251,7 +318,7 @@ export class BoardService {
     }
     
     async getMembers(boardId: number, currentUser: UserEntity): Promise<GetMembersInterface> {
-        const board = await this.getBoardById(boardId, currentUser.id)
+        const board = await this.getBoardByIdAndCheckAccess(boardId, currentUser.id)
         
         const adminsIds = board.admins.map(user => user.id)
         const isCurrentUserAdmin = adminsIds.includes(currentUser.id)
@@ -268,6 +335,67 @@ export class BoardService {
                     .map(member => ({ ...member, isAdmin: false }))
             ]
         }
+    }
+    
+    async changeOrder(changeOrderDto: ChangeOrderDto, currentUserId: number): Promise<void> {
+        const board = await this.getBoardByIdAndCheckAccess(
+            changeOrderDto.boardId,
+            currentUserId,
+            ['lists', 'cards']
+        )
+        
+        const list = await this.listService.getListById(changeOrderDto.newListId)
+        const card = await this.cardService.getCardById(changeOrderDto.cardId)
+        const boardListIds = board.lists.map(list => list.id)
+        const boardCardIds = board.cards.map(card => card.id)
+        
+        if (!boardListIds.includes(list.id)) {
+            throw new BadRequestException('This board do not have this list')
+        }
+        
+        if (!boardCardIds.includes(card.id)) {
+            throw new BadRequestException('This board do not have this card')
+        }
+        
+        card.list = list
+        
+        board.order.forEach(list => {
+            list.cardsIds = list.cardsIds
+                .filter(id => (boardCardIds.includes(id) && id !== changeOrderDto.cardId))
+        })
+        
+        const listFromOrder = board.order.find(list => list.listId === changeOrderDto.newListId)
+        listFromOrder.cardsIds.splice(changeOrderDto.newCardPosition, 0, card.id)
+        
+        await this.cardRepository.save(card)
+        await this.boardRepository.save(board)
+    }
+    
+    async changeBoard(
+        boardId: number,
+        userId: number,
+        changeBoardDto: ChangeBoardDto
+    ): Promise<ChangeBoardType> {
+        let board = await this.getBoardByIdAndCheckAccess(boardId, userId)
+        board = { ...board, ...changeBoardDto }
+        await this.boardRepository.save(board)
+        
+        return {
+            id: board.id,
+            name: board.name,
+            color: board.color
+        }
+    }
+    
+    async deleteBoard(boardId: number, userId: number): Promise<void> {
+        const board = await this.getBoardByIdAndCheckAccess(boardId, userId)
+        
+        if (this.isUserAdmin(userId, board)) {
+            await this.boardRepository.remove(board)
+            return
+        }
+        
+        throw new ForbiddenException('You do not have access to delete this board')
     }
     
 }
