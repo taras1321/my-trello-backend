@@ -1,3 +1,5 @@
+.env
+
 # compiled output
 /dist
 /node_modules
@@ -7,7 +9,7 @@ logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
-yarn-debug.log*
+yarn-debug.log*.env
 yarn-error.log*
 lerna-debug.log*
 

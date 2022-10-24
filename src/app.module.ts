@@ -1,16 +1,25 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { BoardModule } from './board/board.module'
 import { CardModule } from './card/card.module'
 import { CommentModule } from './comment/comment.module'
 import { ListModule } from './list/list.module'
-import { ormConfig } from './orm-config'
 import { AuthMiddleware } from './user/middlewares/auth.middleware'
 import { UserModule } from './user/user.module'
 
 @Module({
     imports: [
-        TypeOrmModule.forRoot(ormConfig),
+        ConfigModule.forRoot(),
+        TypeOrmModule.forRoot({
+            url: process.env.DATABASE_URL,
+            type: 'postgres',
+            ssl: {
+                rejectUnauthorized: false,
+            },
+            entities: ['dist/**/*.entity{.ts,.js}'],
+            autoLoadEntities: true,
+        }),
         UserModule,
         BoardModule,
         ListModule,
