@@ -76,13 +76,14 @@ export class CardService {
             .leftJoinAndSelect('card.executor', 'executor')
             .leftJoinAndSelect('card.board', 'board')
             .leftJoinAndSelect('card.comments', 'comments')
+            .leftJoinAndSelect('comments.user', 'commentOwner')
             .leftJoinAndSelect('board.admins', 'admins')
             .leftJoinAndSelect('board.members', 'members')
             .where('card.id = :id', { id: cardId })
             .select([
                 'card.id', 'card.name', 'card.description', 'card.executor',
                 'comments', 'board.id', 'admins.id', 'admins.name', 'members.id', 'members.name',
-                'executor.id', 'executor.name'
+                'executor.id', 'executor.name', 'commentOwner.id', 'commentOwner.name'
             ])
             .getOne()
         

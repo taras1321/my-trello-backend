@@ -15,6 +15,7 @@ import { CreateBoardDto } from './dto/create-board.dto'
 import { MemberDto } from './dto/member.dto'
 import { BoardWithListsAndCardsInterface } from './types/board-with-lists-and-cards.interface'
 import { ChangeBoardType } from './types/change-board.type'
+import { CommentsCountByUserInterface } from './types/comments-count-by-user.interface'
 import { CreateBoardResponseInterface } from './types/create-board-response.interface'
 import { GetBoardsInterface } from './types/get-boards.interface'
 import { GetMembersInterface } from './types/get-members.interface'
@@ -97,6 +98,14 @@ export class BoardService {
             throw new BadRequestException('User is not a member of this board')
         }
         
+        await this.userService.removeAllUserTasksInBoard(
+            removeMemberDto.userId,
+            removeMemberDto.boardId
+        )
+        await this.userService.removeAllUserCommentsInBoard(
+            removeMemberDto.userId,
+            removeMemberDto.boardId
+        )
         board.members = board.members.filter(member => member.id !== removeMemberDto.userId)
         await this.boardRepository.save(board)
         
@@ -138,6 +147,15 @@ export class BoardService {
             await this.boardRepository.remove(board)
             return
         }
+        
+        await this.userService.removeAllUserTasksInBoard(
+            removeAdminDto.userId,
+            removeAdminDto.boardId
+        )
+        await this.userService.removeAllUserCommentsInBoard(
+            removeAdminDto.userId,
+            removeAdminDto.boardId
+        )
         
         await this.boardRepository.save(board)
         return
@@ -246,9 +264,10 @@ export class BoardService {
             .leftJoinAndSelect('board.cards', 'card')
             .leftJoinAndSelect('board.admins', 'admin')
             .leftJoinAndSelect('board.members', 'member')
-            .leftJoin('card.comments', 'comment')
+            .leftJoinAndSelect('board.likedUsers', 'likedUsers')
+            .leftJoinAndSelect('card.comments', 'comment')
+            .leftJoinAndSelect('comment.user', 'commentAuthor')
             .leftJoinAndSelect('card.executor', 'executor')
-            .loadRelationCountAndMap('card.commentsLength', 'card.comments')
             .where('board.id = :id', { id: boardId })
             .getOne()
         
@@ -274,6 +293,12 @@ export class BoardService {
             })
         })
         
+        let isLikedByCurrentUser = false
+        
+        if (board.likedUsers.map(user => user.id).includes(userId)) {
+            isLikedByCurrentUser = true
+        }
+        
         await this.boardRepository.save(board)
         
         return {
@@ -281,17 +306,32 @@ export class BoardService {
             name: board.name,
             color: board.color,
             isCurrentUserAdmin: this.isUserAdmin(userId, board),
+            liked: isLikedByCurrentUser,
             lists: board.order.map(item => {
                 const list = board.lists.find(list => list.id === item.listId)
                 
                 const cards = item.cardsIds.map(cardId => {
                     const card = board.cards.find(card => card.id === cardId)
+                    const commentsCountByUser: CommentsCountByUserInterface[] = []
+                    
+                    card.comments.forEach(comment => {
+                        const user = commentsCountByUser
+                            .find(user => user.userId === comment.user.id)
+                        
+                        if (user) {
+                            user.commentsCount++
+                        } else {
+                            commentsCountByUser.push({ userId: comment.user.id, commentsCount: 1 })
+                        }
+                    })
                     
                     return {
                         id: card.id,
                         name: card.name,
                         hasExecutor: !!card.executor,
-                        commentsCount: card['commentsLength']
+                        executorId: card.executor ? card.executor.id : null,
+                        commentsCount: card.comments.length,
+                        commentsCountByUser
                     }
                 })
                 

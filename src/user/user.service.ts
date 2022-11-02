@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { compare } from 'bcrypt'
 import { sign } from 'jsonwebtoken'
 import { Repository } from 'typeorm'
+import { CardEntity } from '../card/card.entity'
+import { CommentEntity } from '../comment/comment.entity'
 import { JWT_SECRET } from '../config'
 import { LoginUserDto } from './dto/login-user.dto'
 import { RegistrationUserDto } from './dto/registration-user.dto'
@@ -12,7 +14,11 @@ import { UserEntity } from './user.entity'
 @Injectable()
 export class UserService {
     
-    constructor(@InjectRepository(UserEntity) private userRepository: Repository<UserEntity>) {
+    constructor(
+        @InjectRepository(UserEntity) private userRepository: Repository<UserEntity>,
+        @InjectRepository(CardEntity) private cardRepository: Repository<CardEntity>,
+        @InjectRepository(CommentEntity) private commentRepository: Repository<CommentEntity>
+    ) {
     }
     
     async registration(registrationUserDto: RegistrationUserDto): Promise<UserEntity> {
@@ -78,6 +84,39 @@ export class UserService {
         }
         
         return user
+    }
+    
+    async removeAllUserTasksInBoard(userId: number, boardId: number): Promise<void> {
+        const user = await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.tasks', 'task')
+            .leftJoinAndSelect('task.executor', 'executor')
+            .leftJoinAndSelect('task.board', 'board')
+            .where('executor.id = :userId AND board.id = :boardId', { userId, boardId })
+            .getOne()
+        
+        if (user?.tasks) {
+            for (const task of user.tasks) {
+                task.executor = null
+                await this.cardRepository.save(task)
+            }
+        }
+    }
+    
+    async removeAllUserCommentsInBoard(userId: number, boardId: number): Promise<void> {
+        const user = await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.comments', 'comment')
+            .leftJoinAndSelect('comment.card', 'card')
+            .leftJoinAndSelect('card.board', 'board')
+            .where('user.id = :userId AND board.id = :boardId', { userId, boardId })
+            .getOne()
+        
+        if (user?.comments) {
+            for (const comment of user.comments) {
+                await this.commentRepository.remove(comment)
+            }
+        }
     }
     
 }
