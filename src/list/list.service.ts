@@ -1,4 +1,6 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+    ForbiddenException, forwardRef, Inject, Injectable, NotFoundException
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { BoardEntity } from '../board/board.entity'
@@ -13,6 +15,7 @@ export class ListService {
     constructor(
         @InjectRepository(ListEntity) private listRepository: Repository<ListEntity>,
         @InjectRepository(BoardEntity) private boardRepository: Repository<BoardEntity>,
+        @Inject(forwardRef(() => BoardService))
         private boardService: BoardService
     ) {
     }

@@ -24,6 +24,7 @@ export class CardService {
         private boardService: BoardService,
         @Inject(forwardRef(() => ListService))
         private listService: ListService,
+        @Inject(forwardRef(() => UserService))
         private userService: UserService
     ) {
     }

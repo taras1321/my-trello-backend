@@ -16,7 +16,11 @@ export class CardEntity {
     @Column({ nullable: true })
     description: string
     
-    @ManyToOne(() => UserEntity, user => user.tasks)
+    @ManyToOne(
+        () => UserEntity,
+        user => user.tasks,
+        { onDelete: 'SET NULL' }
+    )
     executor: UserEntity
     
     @ManyToOne(

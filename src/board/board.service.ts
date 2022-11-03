@@ -27,6 +27,7 @@ export class BoardService {
     constructor(
         @InjectRepository(BoardEntity) private boardRepository: Repository<BoardEntity>,
         @InjectRepository(CardEntity) private cardRepository: Repository<CardEntity>,
+        @Inject(forwardRef(() => UserService))
         private userService: UserService,
         @Inject(forwardRef(() => ListService))
         private listService: ListService,
