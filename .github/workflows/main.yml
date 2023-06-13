@@ -11,8 +11,11 @@ jobs:
     steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
-      - name: Test
-        run: echo "$SHA12"
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: Check outputs
+        run: echo ${{ steps.vars.outputs.sha_short }}
 #      - name: Set up QEMU
 #        uses: docker/setup-qemu-action@v2
 #      - name: Set up Docker Buildx
