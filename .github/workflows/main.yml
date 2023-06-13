@@ -7,7 +7,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     env:
-      SHA12: ${GITHUB_SHA::5}
+      SHA12: ${GITHUB_SHA::12}
     steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
