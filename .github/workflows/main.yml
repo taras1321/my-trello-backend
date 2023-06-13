@@ -20,6 +20,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: taras13/app:$(echo $GITHUB_SHA | head -c7)
-          build-args:
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}"
+          tags: taras13/app:latest
+          env:
+            - DATABASE_URL: ${{ secrets.DATABASE_URL }}
