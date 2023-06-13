@@ -7,7 +7,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     env:
-      Greeting: $(echo $GITHUB_SHA:0:7 | head -c7)
+      Greeting:
+        run: echo $GITHUB_SHA | head -c7
     steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
@@ -16,7 +17,7 @@ jobs:
       - name: Test2
         run: echo ${{ secrets.DATABASE_URL }}
       - name: Test3
-        run: echo $GITHUB_SHA
+        run: echo $GITHUB_SHA | head -c7
       - name: Test3
         run: echo $GITHUB_SHA:0:7
 #      - name: Set up QEMU
