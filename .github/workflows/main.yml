@@ -11,13 +11,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-#      - name: Set outputs
-#        id: vars
-#        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-#      - name: Check outputs
-#        run: echo ${{ steps.vars.outputs.sha_short }}
+      - name: Add SHORT_SHA env property with commit short sha
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       - name: Test
-        run: echo $SHA12
+        run: echo $SHORT_SHA
 #      - name: Set up QEMU
 #        uses: docker/setup-qemu-action@v2
 #      - name: Set up Docker Buildx
