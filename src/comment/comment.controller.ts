@@ -16,17 +16,14 @@ export class CommentController {
     @UseGuards(AuthGuard)
     create(
         @User() currentUser: UserEntity,
-        @Body() createCommentDto: CreateCommentDto
+        @Body() createCommentDto: CreateCommentDto,
     ): Promise<CreateCommentResponseInterface> {
         return this.commentService.create(createCommentDto, currentUser)
     }
     
     @Delete(':id')
     @UseGuards(AuthGuard)
-    deleteComment(
-        @Param('id') commentId: number,
-        @User('id') currentUserId: number
-    ): Promise<void> {
+    deleteComment(@Param('id') commentId: number, @User('id') currentUserId: number): Promise<void> {
         return this.commentService.deleteComment(commentId, currentUserId)
     }
     

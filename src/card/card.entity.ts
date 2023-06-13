@@ -16,28 +16,20 @@ export class CardEntity {
     @Column({ nullable: true })
     description: string
     
-    @ManyToOne(
-        () => UserEntity,
-        user => user.tasks,
-        { onDelete: 'SET NULL' }
-    )
+    @ManyToOne(() => UserEntity, user => user.tasks, { onDelete: 'SET NULL' })
     executor: UserEntity
     
-    @ManyToOne(
-        () => BoardEntity,
-        board => board.cards,
-        { nullable: false, onDelete: 'CASCADE' }
-    )
+    @ManyToOne(() => BoardEntity, board => board.cards, { nullable: false, onDelete: 'CASCADE' })
     board: BoardEntity
     
-    @ManyToOne(
-        () => ListEntity,
-        list => list.cards,
-        { nullable: false, onDelete: 'CASCADE' }
-    )
+    @ManyToOne(() => ListEntity, list => list.cards, { nullable: false, onDelete: 'CASCADE' })
     list: ListEntity
     
     @OneToMany(() => CommentEntity, comment => comment.card)
     comments: CommentEntity[]
     
 }
+
+
+
+
