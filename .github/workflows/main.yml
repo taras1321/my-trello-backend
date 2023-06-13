@@ -16,7 +16,9 @@ jobs:
       - name: Test2
         run: echo ${{ secrets.DATABASE_URL }}
       - name: Test3
-        run: echo "$Greeting"
+        run: echo "$GITHUB_SHA"
+      - name: Test3
+        run: echo "$GITHUB_SHA:0:7"
 #      - name: Set up QEMU
 #        uses: docker/setup-qemu-action@v2
 #      - name: Set up Docker Buildx
