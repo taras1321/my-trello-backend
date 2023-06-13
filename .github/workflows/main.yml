@@ -9,8 +9,6 @@ jobs:
     env:
       SHA12: $(git rev-parse --short HEAD)
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Add SHORT_SHA env property with commit short sha
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | head -c7`" >> $GITHUB_ENV
       - name: Test
