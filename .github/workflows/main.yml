@@ -12,7 +12,7 @@ jobs:
 #      - name: Checkout code
 #        uses: actions/checkout@v2
       - name: Test
-        run: echo $SHA12
+        run: echo "$SHA12"
 #      - name: Set up QEMU
 #        uses: docker/setup-qemu-action@v2
 #      - name: Set up Docker Buildx
