@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Add SHORT_SHA env property with commit short sha
-        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | head -c7`" >> $GITHUB_ENV
       - name: Test
         run: echo $SHORT_SHA
 #      - name: Set up QEMU
