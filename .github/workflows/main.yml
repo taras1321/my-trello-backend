@@ -9,8 +9,8 @@ jobs:
     env:
       SHA12: ${GITHUB_SHA::12}
     steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Set outputs
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
